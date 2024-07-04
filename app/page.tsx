@@ -3,12 +3,11 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import ProfileMini from "./components/profileMini";
 import SpotifyLoginButton from "./components/spotifyLoginButton";
-import { Button } from "./components/button";
 import { getUserByUsername } from "@/lib/user";
 import { getRecentTracks } from "@/lib/spotify";
-import Record from "./components/Record";
+import Record from "./components/record";
 
-export const Home = async () => {
+const Home = async () => {
   const { user } = await validateRequest();
   // If the user is logged in, get their recent tracks, otherwise get the feature user's recent tracks
   const targetUserName = user

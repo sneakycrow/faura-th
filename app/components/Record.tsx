@@ -10,13 +10,7 @@ interface RecordProps {
   cover: string;
 }
 
-export const Record = ({
-  artist,
-  album,
-  title,
-  releaseDate,
-  cover,
-}: RecordProps) => {
+const Record = ({ artist, album, title, releaseDate, cover }: RecordProps) => {
   const [isDetailsShown, setDetailsShown] = useState(false);
   return (
     <div
