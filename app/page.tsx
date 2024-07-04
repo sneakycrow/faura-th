@@ -21,12 +21,13 @@ const Home = async () => {
   // If we have a db user, get their Spotify tokens
   // It should be the first token, if they don't have any tokens, it will be null
   const spotifyTokens = dbUser ? dbUser.Token[0] ?? null : null;
-  const recentTracks = user
-    ? await getRecentTracks(user.id, {
-        accessToken: spotifyTokens?.accessToken ?? "", // can be null if there's no user, but we check upstream
-        refreshToken: spotifyTokens?.refreshToken ?? "",
-      })
-    : null;
+  const recentTracks =
+    spotifyTokens && dbUser
+      ? await getRecentTracks(dbUser.id, {
+          accessToken: spotifyTokens?.accessToken ?? "", // can be null if there's no user, but we check upstream
+          refreshToken: spotifyTokens?.refreshToken ?? "",
+        })
+      : null;
 
   // A simple logout form, this mostly exists just for readability
   const Logout = () => {
@@ -36,32 +37,39 @@ const Home = async () => {
       </form>
     );
   };
+
   return (
     <main className="p-20 flex flex-col items-center justify-center min-w-screen min-h-screen dark:text-cherry">
-      <div className="font-bold text-center my-10">
+      <div className="flex flex-col justify-center items-center font-bold text-center my-10">
         <h1 className="text-5xl text-cherry">Recent Record Shelf</h1>
         <p className="text-3xl text-coral">
           A digital record shelf showing your recent spotify records
         </p>
+        {!user && (
+          <div className="flex flex-col space-y-4 mt-10">
+            <p className="text-sm">Sign in to customize your shelf</p>
+            <SpotifyLoginButton />
+          </div>
+        )}
       </div>
-      {user ? (
-        <section className="flex flex-col items-center mx-auto">
-          {/* Record Shelf */}
-          <aside className="grid lg:grid-cols-3 gap-10">
-            {recentTracks &&
-              recentTracks
-                .slice(0, 9)
-                .map((record, index) => (
-                  <Record
-                    key={index}
-                    artist={record.track.album.artists[0].name}
-                    album={record.track.album.name}
-                    title={record.track.name}
-                    releaseDate={record.track.album.release_date}
-                    cover={record.track.album.images[0].url}
-                  />
-                ))}
-          </aside>
+      <section className="flex flex-col items-center mx-auto">
+        {/* Record Shelf */}
+        <aside className="grid lg:grid-cols-3 gap-10">
+          {recentTracks &&
+            recentTracks
+              .slice(0, 9)
+              .map((record, index) => (
+                <Record
+                  key={index}
+                  artist={record.track.album.artists[0].name}
+                  album={record.track.album.name}
+                  title={record.track.name}
+                  releaseDate={record.track.album.release_date}
+                  cover={record.track.album.images[0].url}
+                />
+              ))}
+        </aside>
+        {user && (
           <div className="mt-20">
             <ProfileMini
               avatar={user.avatar}
@@ -69,10 +77,8 @@ const Home = async () => {
               logout={<Logout />}
             />
           </div>
-        </section>
-      ) : (
-        <SpotifyLoginButton />
-      )}
+        )}
+      </section>
     </main>
   );
 };
@@ -94,7 +100,7 @@ async function logout(): Promise<ActionResult> {
     sessionCookie.value,
     sessionCookie.attributes
   );
-  return redirect("/login");
+  return redirect("/");
 }
 
 interface ActionResult {

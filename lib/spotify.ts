@@ -45,21 +45,26 @@ export const refreshAccessTokens = async (
     throw new Error(`Failed to refresh token, ${status}, ${message}`);
   }
 
-  if (!json.access_token) {
+  const accessToken = json.access_token;
+  if (!accessToken) {
+    // We _need_ an access token or we can't do anything
     throw new Error(
       `Failed to refresh token, no access token found in response`
     );
   }
 
-  if (!json.refresh_token) {
-    throw new Error(
-      `Failed to refresh token, no refresh token found in response`
+  let newRefreshToken = json.refresh_token; // Change this to the one given if there's not a new one
+  if (!newRefreshToken) {
+    // As long as we have an access token, we can continue for now, but we should log this
+    console.warn(
+      `No refresh token found in response, user will need to re-authenticate soon`
     );
+    newRefreshToken = refreshToken;
   }
 
   return {
-    accessToken: json.access_token,
-    refreshToken: json.refresh_token,
+    accessToken: accessToken,
+    refreshToken: newRefreshToken,
     expires: json.expires_in,
   };
 };
