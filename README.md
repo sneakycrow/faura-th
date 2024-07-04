@@ -4,7 +4,7 @@ This is a small project for displaying a digital record shelf of recent tracks l
 
 ## Demo
 
-If you don't want to run the project yourself, checkout the demo app
+If you don't want to run the project yourself, [checkout the demo app here](https://faura-th.fly.dev/)
 
 ## Prerequisites
 
