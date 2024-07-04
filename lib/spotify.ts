@@ -17,56 +17,61 @@ type UpdatedTokens = {
 // A function for refreshing the access token for a user
 export const refreshAccessTokens = async (
   refreshToken: string
-): Promise<UpdatedTokens> => {
-  const spotifyClientId = process.env.SPOTIFY_CLIENT_ID;
-  const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!spotifyClientId || !spotifyClientSecret) {
-    throw new Error("Missing Spotify client ID");
+): Promise<UpdatedTokens | null> => {
+  try {
+    const spotifyClientId = process.env.SPOTIFY_CLIENT_ID;
+    const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    if (!spotifyClientId || !spotifyClientSecret) {
+      throw new Error("Missing Spotify client ID");
+    }
+    const basicCreds = Buffer.from(
+      spotifyClientId + ":" + spotifyClientSecret
+    ).toString("base64");
+    const res = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${basicCreds}`,
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) {
+      const { status, message } = json.error;
+      throw new Error(`Failed to refresh token, ${status}, ${message}`);
+    }
+
+    const accessToken = json.access_token;
+    if (!accessToken) {
+      // We _need_ an access token or we can't do anything
+      throw new Error(
+        `Failed to refresh token, no access token found in response`
+      );
+    }
+
+    let newRefreshToken = json.refresh_token; // Change this to the one given if there's not a new one
+    if (!newRefreshToken) {
+      // As long as we have an access token, we can continue for now, but we should log this
+      console.warn(
+        `No refresh token found in response, user will need to re-authenticate soon`
+      );
+      newRefreshToken = refreshToken;
+    }
+
+    return {
+      accessToken: accessToken,
+      refreshToken: newRefreshToken,
+      expires: json.expires_in,
+    };
+  } catch (e) {
+    console.error(`Error refreshing access token: ${e}`);
+    return null;
   }
-  const basicCreds = Buffer.from(
-    spotifyClientId + ":" + spotifyClientSecret
-  ).toString("base64");
-  const res = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${basicCreds}`,
-    },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    }),
-  });
-
-  const json = await res.json();
-
-  if (!res.ok) {
-    const { status, message } = json.error;
-    throw new Error(`Failed to refresh token, ${status}, ${message}`);
-  }
-
-  const accessToken = json.access_token;
-  if (!accessToken) {
-    // We _need_ an access token or we can't do anything
-    throw new Error(
-      `Failed to refresh token, no access token found in response`
-    );
-  }
-
-  let newRefreshToken = json.refresh_token; // Change this to the one given if there's not a new one
-  if (!newRefreshToken) {
-    // As long as we have an access token, we can continue for now, but we should log this
-    console.warn(
-      `No refresh token found in response, user will need to re-authenticate soon`
-    );
-    newRefreshToken = refreshToken;
-  }
-
-  return {
-    accessToken: accessToken,
-    refreshToken: newRefreshToken,
-    expires: json.expires_in,
-  };
 };
 
 type TrackData = {
@@ -130,16 +135,20 @@ export const getRecentTracks = async (
     if (json.error?.status === 401) {
       const newTokens = await refreshAccessTokens(tokens.refreshToken);
       // Successfully got new tokens, update account in database
-      updateAccessTokens(
-        userId,
-        newTokens.accessToken,
-        newTokens.refreshToken,
-        new Date(newTokens.expires)
-      );
-      // If we're not already in a retry, try again
-      if (!isRetry) {
-        return getRecentTracks(userId, newTokens, true);
+      if (newTokens) {
+        updateAccessTokens(
+          userId,
+          newTokens.accessToken,
+          newTokens.refreshToken,
+          new Date(newTokens.expires)
+        );
+        // If we're not already in a retry, try again
+        if (!isRetry) {
+          return getRecentTracks(userId, newTokens, true);
+        }
       }
+      console.warn("Failed to get recent tracks, failed to refresh token");
+      return [];
     }
     throw new Error("Failed to get recent tracks, no items found in response");
   }

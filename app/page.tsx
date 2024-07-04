@@ -13,11 +13,9 @@ const Home = async () => {
   const targetUserName = user
     ? user.username
     : process.env.SPOTIFY_FEATURED_USER;
-  // If there's no user (like if feature user isn't set), we can't get their recent tracks
-  if (!targetUserName) {
-    return <div>Feature user not set</div>;
-  }
-  const dbUser = await getUserByUsername(targetUserName);
+  const dbUser = targetUserName
+    ? await getUserByUsername(targetUserName)
+    : null;
   // If we have a db user, get their Spotify tokens
   // It should be the first token, if they don't have any tokens, it will be null
   const spotifyTokens = dbUser ? dbUser.Token[0] ?? null : null;
