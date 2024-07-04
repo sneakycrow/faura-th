@@ -15,7 +15,6 @@ const Home = async () => {
     : process.env.SPOTIFY_FEATURED_USER;
   // If there's no user (like if feature user isn't set), we can't get their recent tracks
   if (!targetUserName) {
-    console.log(`farting`);
     return <div>Feature user not set</div>;
   }
   const dbUser = await getUserByUsername(targetUserName);
