@@ -50,33 +50,31 @@ const Home = async () => {
           </div>
         )}
       </div>
-      <section className="flex flex-col items-center mx-auto">
+      <section className="w-full grid lg:grid-cols-3 gap-10 items-center justify-center">
         {/* Record Shelf */}
-        <aside className="grid lg:grid-cols-3 gap-10">
-          {recentTracks &&
-            recentTracks
-              .slice(0, 9)
-              .map((record, index) => (
-                <Record
-                  key={index}
-                  artist={record.track.album.artists[0].name}
-                  album={record.track.album.name}
-                  title={record.track.name}
-                  releaseDate={record.track.album.release_date}
-                  cover={record.track.album.images[0].url}
-                />
-              ))}
-        </aside>
-        {user && (
-          <div className="mt-20">
-            <ProfileMini
-              avatar={user.avatar}
-              username={user.username}
-              logout={<Logout />}
-            />
-          </div>
-        )}
+        {recentTracks &&
+          recentTracks
+            .slice(0, 9)
+            .map((record, index) => (
+              <Record
+                key={index}
+                artist={record.track.album.artists[0].name}
+                album={record.track.album.name}
+                title={record.track.name}
+                releaseDate={record.track.album.release_date}
+                cover={record.track.album.images[0].url}
+              />
+            ))}
       </section>
+      {user && (
+        <div className="mt-20 mx-auto">
+          <ProfileMini
+            avatar={user.avatar}
+            username={user.username}
+            logout={<Logout />}
+          />
+        </div>
+      )}
     </main>
   );
 };

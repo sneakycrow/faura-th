@@ -9,7 +9,7 @@ export const Avatar = ({
   size = 64,
   border = "border-4 border-coral",
 }: AvatarProps) => {
-  const baseClasses = ["rounded-full"];
+  const baseClasses = ["rounded-full", "min-h-[32px]", "min-w-[32px]"];
   const classes = [...baseClasses, border].join(" ");
   return (
     <img

@@ -14,7 +14,7 @@ const Record = ({ artist, album, title, releaseDate, cover }: RecordProps) => {
   const [isDetailsShown, setDetailsShown] = useState(false);
   return (
     <div
-      className="w-[300px] h-[300px] border-cherry hover:border-coral transition-colors border-[20px] relative hover:cursor-pointer"
+      className="mx-auto w-[300px] h-[300px] border-cherry hover:border-coral transition-colors border-[20px] relative hover:cursor-pointer"
       onClick={() => setDetailsShown(!isDetailsShown)}
     >
       <div
